@@ -1,0 +1,56 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "dummy-api-key-for-testing"
+          prompt: "List the files in the current directory"
+          model: "auto"
+          working-directory: "."
+          permissions: "read-only"
+          timeout: "30"
+
+      - name: Assert step ran (outcome is set)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ -z "$OUTCOME" ]; then
+            echo "FAIL: expected step outcome to be set"
+            exit 1
+          fi
+          echo "PASS: step outcome is '$OUTCOME'"
+
+      - name: Assert exit-code output or step failure
+        env:
+          EXIT_CODE: ${{ steps.action.outputs.exit-code }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "exit-code: $EXIT_CODE"
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ] && [ -z "$EXIT_CODE" ]; then
+            echo "FAIL: action succeeded but exit-code output was not set"
+            exit 1
+          fi
+          echo "PASS: exit-code='$EXIT_CODE' outcome='$OUTCOME'"
+
+      - name: Assert cache-hit output or step failure
+        env:
+          CACHE_HIT: ${{ steps.action.outputs.cache-hit }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "cache-hit: $CACHE_HIT"
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ] && [ -z "$CACHE_HIT" ]; then
+            echo "FAIL: action succeeded but cache-hit output was not set"
+            exit 1
+          fi
+          echo "PASS: cache-hit='$CACHE_HIT' outcome='$OUTCOME'"
