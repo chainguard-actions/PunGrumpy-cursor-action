@@ -1,0 +1,51 @@
+name: Test invalid API key handling
+on:
+  workflow_dispatch:
+
+jobs:
+  test-invalid-api-key:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "invalid-api-key-for-testing"
+          prompt: "Say hello"
+          model: "default"
+          timeout: "30"
+
+      - name: Assert action step ran
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step ran with outcome '$OUTCOME'"
+
+      - name: Assert action failed with invalid API key
+        env:
+          EXIT_CODE: ${{ steps.action.outputs.exit-code }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "exit-code: '$EXIT_CODE'"
+          echo "outcome: '$OUTCOME'"
+          # The action should fail with an invalid API key.
+          # Either the stub sets exit-code=1, or the action fails at infrastructure level.
+          if [ -n "$EXIT_CODE" ]; then
+            if [ "$EXIT_CODE" = "0" ]; then
+              echo "FAIL: expected non-zero exit code with invalid API key, got 0"
+              exit 1
+            fi
+            echo "PASS: action correctly failed with exit-code '$EXIT_CODE'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action step failed as expected (invalid API key or infrastructure failure)"
+          else
+            echo "FAIL: expected action to fail with invalid API key, but outcome='$OUTCOME' and exit-code='$EXIT_CODE'"
+            exit 1
+          fi

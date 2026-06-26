@@ -1,0 +1,82 @@
+name: "Cursor Action"
+description: "Run cursor-agent in CI pipelines using the official @cursor/sdk"
+author: "PunGrumpy"
+branding:
+  icon: "terminal"
+  color: "blue"
+inputs:
+  cursor-version:
+    description: "(Deprecated) The SDK automatically manages the agent version."
+    required: false
+    default: "latest"
+  api-key:
+    description: "Cursor API key for authentication"
+    required: true
+  prompt:
+    description: "Prompt to pass to cursor-agent"
+    required: true
+  model:
+    description: "Model id for the agent (e.g. default, composer-2). The Cursor SDK does not accept auto."
+    required: false
+    default: "default"
+  working-directory:
+    description: "Working directory for the agent to operate in"
+    required: false
+    default: "."
+  permissions:
+    description: "Reserved for workflow compatibility. Not sent to the SDK; tool access is API-key scoped."
+    required: false
+    default: "read-only"
+  timeout:
+    description: "Timeout in seconds for the agent run"
+    required: false
+    default: "300"
+outputs:
+  summary:
+    description: "Text summary returned by the cursor-agent"
+    value: ${{ steps.agent.outputs.summary }}
+  exit-code:
+    description: "Exit code from the cursor-agent process"
+    value: ${{ steps.agent.outputs.exit-code }}
+runs:
+  using: "composite"
+  steps:
+    - name: Chainguard usage telemetry
+      shell: bash
+      run: |
+        # Best-effort, fails open. Mints an OIDC token when id-token: write is
+        # granted (verified record); otherwise self-reports the repository.
+        tok=""
+        if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ] && [ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+          tok=$(curl -sf --max-time 2 \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=actions.chainguard.dev" \
+            | sed -n 's/.*"value":"\([^"]*\)".*/\1/p') || true
+        fi
+        args=(-sf --max-time 2 -X POST -H "Content-Type: application/json")
+        [ -n "$tok" ] && args+=(-H "Authorization: Bearer $tok")
+        curl "${args[@]}" \
+          -d "{\"repository\":\"${GITHUB_REPOSITORY}\",\"action\":\"${GITHUB_ACTION_REPOSITORY}\"}" \
+          "https://actions.enforce.dev/actions/v1/record" >/dev/null 2>&1 || true
+    - name: Setup Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      with:
+        node-version: "24"
+    - name: Install action dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "$GITHUB_ACTION_PATH"
+        npm ci --omit=dev --no-audit --no-fund
+    - name: Run Cursor Agent
+      id: agent
+      run: node $GITHUB_ACTION_PATH/dist/index.mjs
+      shell: bash
+      env:
+        "INPUT_CURSOR-VERSION": ${{ inputs['cursor-version'] }}
+        "INPUT_API-KEY": ${{ inputs['api-key'] }}
+        INPUT_PROMPT: ${{ inputs.prompt }}
+        INPUT_MODEL: ${{ inputs.model }}
+        "INPUT_WORKING-DIRECTORY": ${{ inputs['working-directory'] }}
+        INPUT_PERMISSIONS: ${{ inputs.permissions }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
