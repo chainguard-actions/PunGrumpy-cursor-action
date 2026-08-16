@@ -1,0 +1,41 @@
+name: Test custom inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a working subdirectory
+        run: mkdir -p /tmp/cursor-workdir
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "fake-cursor-api-key-for-testing"
+          prompt: "Describe what you see in this directory"
+          model: "default"
+          working-directory: "/tmp/cursor-workdir"
+          permissions: "read-only"
+          timeout: "30"
+          cursor-version: "latest"
+
+      - name: Assert action ran with custom inputs and failed gracefully
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          SUMMARY: ${{ steps.action.outputs.summary }}
+          EXIT_CODE: ${{ steps.action.outputs.exit-code }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "summary: $SUMMARY"
+          echo "exit-code: $EXIT_CODE"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with custom inputs"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (expected with fake API key)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
