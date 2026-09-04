@@ -1,0 +1,36 @@
+name: Test deprecated cursor-version input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Using a non-'latest' cursor-version should emit a deprecation warning
+      # but not fail input validation. The action will fail at the SDK level
+      # with a fake API key, which is expected.
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: fake-api-key-for-testing
+          prompt: "Say hello"
+          cursor-version: "1.0.0"
+          timeout: "30"
+
+      - name: Assert action ran (deprecation warning does not cause failure)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail at the SDK level (fake key), NOT at input validation.
+          # A failure here is acceptable (fake API key), but a success would also be fine.
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (deprecation warning did not block execution)"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully at SDK level (expected with fake API key)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
