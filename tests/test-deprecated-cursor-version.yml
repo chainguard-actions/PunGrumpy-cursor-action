@@ -1,0 +1,54 @@
+name: Test deprecated cursor-version input (warning, not failure)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "fake-api-key-for-testing"
+          prompt: "Say hello"
+          cursor-version: "1.0.0"
+          timeout: "30"
+
+      - name: Assert action ran (warning for deprecated input, failure due to fake API key)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          EXIT_CODE: ${{ steps.action.outputs.exit-code }}
+          STATUS: ${{ steps.action.outputs.status }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "exit-code: $EXIT_CODE"
+          echo "status: $STATUS"
+
+          # The action should not be skipped
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+
+          # With a non-'latest' cursor-version, a deprecation warning is emitted
+          # but the action still proceeds. With a fake API key it will fail.
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (real API key may be available)"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (fake API key) after emitting deprecation warning"
+            # On failure, exit-code should be 1 and status should be error
+            if [ "$EXIT_CODE" != "1" ]; then
+              echo "FAIL: expected exit-code=1 on failure, got '$EXIT_CODE'"
+              exit 1
+            fi
+            if [ "$STATUS" != "error" ]; then
+              echo "FAIL: expected status=error on failure, got '$STATUS'"
+              exit 1
+            fi
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS"

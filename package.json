@@ -1,0 +1,61 @@
+{
+  "name": "@pungrumpy/cursor-action",
+  "version": "1.0.3",
+  "description": "Run cursor-agent in CI pipelines using the official @cursor/sdk",
+  "keywords": [
+    "ai",
+    "cli",
+    "cursor",
+    "cursor-agent",
+    "github-action"
+  ],
+  "bugs": {
+    "url": "https://github.com/PunGrumpy/cursor-action/issues"
+  },
+  "license": "MIT",
+  "author": "Noppakorn Kaewsalabnil <hello@pungrumpy.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PunGrumpy/cursor-action.git"
+  },
+  "type": "module",
+  "main": "dist/index.mjs",
+  "module": "src/index.ts",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "changeset": "changeset",
+    "changeset:publish": "bun run build && changeset publish",
+    "changeset:version": "changeset version",
+    "dev": "tsdown --watch",
+    "docs:build": "bun --cwd=docs run build",
+    "docs:dev": "bun --cwd=docs run dev",
+    "docs:reference": "bun run scripts/generate-reference.ts",
+    "docs:typecheck": "bun --cwd=docs run types:check",
+    "format": "ultracite fix",
+    "lint": "ultracite check",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky || exit 0"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.0",
+    "@cursor/sdk": "^1.0.28"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.30.0",
+    "@types/bun": "latest",
+    "husky": "^9.1.7",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "tsdown": "^0.22.0",
+    "ultracite": "^7.10.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,58 @@
+name: Test invalid timeout input validation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "fake-api-key-for-testing"
+          prompt: "Say hello"
+          timeout: "0"
+
+      - name: Assert action failed with validation error for zero timeout
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+
+          # The action must fail because timeout=0 is not a positive integer
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly rejected zero timeout value"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "FAIL: action should have rejected zero timeout value"
+            exit 1
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
+
+      - id: action2
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "fake-api-key-for-testing"
+          prompt: "Say hello"
+          timeout: "not-a-number"
+
+      - name: Assert action failed with validation error for non-numeric timeout
+        env:
+          OUTCOME: ${{ steps.action2.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+
+          # The action must fail because 'not-a-number' is not a valid timeout
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly rejected non-numeric timeout value"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "FAIL: action should have rejected non-numeric timeout value"
+            exit 1
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

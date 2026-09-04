@@ -1,0 +1,34 @@
+name: Test invalid permissions input validation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: "fake-api-key-for-testing"
+          prompt: "Say hello"
+          permissions: "invalid-permission-value"
+
+      - name: Assert action failed with validation error for invalid permissions
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+
+          # The action must fail because 'invalid-permission-value' is not a valid permission
+          # Valid values are: read-only, read-write, full
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly rejected invalid permissions value"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "FAIL: action should have rejected invalid permissions value"
+            exit 1
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
