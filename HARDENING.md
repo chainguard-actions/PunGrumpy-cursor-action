@@ -16,11 +16,11 @@ Action **PunGrumpy--cursor-action/v1.0.0** was hardened automatically. 1 finding
 
 ### unpinned-uses (severity: high)
 
-action.yml references `actions/setup-node@v6`, which is pinned to a mutable version tag rather than an immutable 40-character commit SHA. This means the action could be silently updated to a different (potentially malicious) version without any change to this repository. It should be pinned to a full SHA, e.g. `actions/setup-node@<40-char-sha> # v6`.
+The composite action uses `actions/setup-node@v6`, which is a mutable tag reference rather than a pinned full 40-character SHA commit hash. This means the action could silently pull in a different (potentially malicious) version of setup-node if the tag is moved. It should be pinned to a specific commit SHA, e.g. `actions/setup-node@<40-char-sha> # v6`.
 
 Locations:
 
-- `action.yml:55`
+- `action.yml:54`
 
 ## Iteration Notes
 
@@ -30,5 +30,5 @@ Locations:
 
 **Notes:**
 
-Pinned `actions/setup-node@v6` to its full commit SHA `249970729cb0ef3589644e2896645e5dc5ba9c38` in hardened/action/action.yml (line 55). The mutable tag `v6` is preserved as a comment for readability.
+Pinned actions/setup-node@v6 to actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6 in hardened/action/action.yml line 54. The SHA was resolved via lookup_action_sha.
 
