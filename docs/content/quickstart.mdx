@@ -1,0 +1,32 @@
+---
+title: Quickstart
+description: Add the action to a workflow and read the agent response back.
+---
+
+Run a [Cursor](https://cursor.com) agent as a step in any GitHub Actions workflow, and read its response back as a step output.
+
+## Quickstart
+
+Add a repository secret named `CURSOR_API_KEY`, then use the action:
+
+```yaml
+- name: Run Cursor Agent
+  id: cursor
+  uses: PunGrumpy/cursor-action@v2
+  with:
+    api-key: ${{ secrets.CURSOR_API_KEY }}
+    prompt: "Review this PR for security issues and summarize your findings."
+
+- name: Print summary
+  env:
+    SUMMARY: ${{ steps.cursor.outputs.summary }}
+  run: echo "$SUMMARY"
+```
+
+The action runs on `ubuntu-latest`, `windows-latest`, and `macos-latest`.
+
+## Permissions
+
+`permissions` defaults to `read-only`, which lets the agent read and search the checkout and fetch the web, but not edit files, run commands, or spawn subagents. See [Behaviour](/behaviour) for the full mapping.
+
+Read [Behaviour](/behaviour) before wiring this into anything that gates a merge.

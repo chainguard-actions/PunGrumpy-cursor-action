@@ -1,0 +1,45 @@
+---
+title: Behaviour
+description: What the action does at runtime and how it reports results.
+---
+
+## The run
+
+1. Inputs are validated. An empty `prompt`, an unknown `permissions` value, or a non-positive `timeout` fails the step before anything is sent.
+2. The API key is registered with `::add-mask::`.
+3. A local SDK agent is created against the resolved `working-directory` (`Agent.create({ local: { cwd } })`) and the prompt is sent.
+4. Streamed text is collected, then replaced by the final run result when the SDK provides one. `summary` is that text verbatim, with surrounding whitespace trimmed; a JSON-shaped answer is not unwrapped.
+5. A job summary is written with the status, exit code, agent response, duration, token usage, and any stderr or diagnostics.
+6. The agent is released (`Symbol.asyncDispose`), which shuts down the local executor the SDK started for the run.
+
+## Timeouts and failures
+
+When `timeout` elapses, the action requests a run cancellation and waits at most ten seconds for the run to stop. A run that stops, or never answers, is reported as `cancelled`, the step exits with code `1`, and the job summary records the cancellation. A run that finishes during those ten seconds keeps its result and exit code `0`, with a warning that it overran the timeout.
+
+The same applies when a run ends with an error. The action reads `status` and `error` from `run.wait()`, sets exit code `1`, and writes the error details to stderr.
+
+## Why it installs instead of shipping one file
+
+The action is a composite action: it sets up Node.js 24, runs `npm ci --omit=dev` inside its own action directory, and then executes `dist/index.mjs`. Expect a few seconds of install time per job.
+
+`@cursor/sdk` cannot be bundled into a single file. It is a webpack build that dynamically imports its own chunks at runtime, resolved relative to its own package directory, and it resolves a native `@cursor/sdk-<platform>` package for the `rg` and `cursorsandbox` binaries. A bundle containing it imports cleanly and then fails inside `Agent.create`.
+
+`dist/` is committed and holds only this repository's own code, a few kB.
+
+## Permissions
+
+The `permissions` input is passed to the SDK as a tool allow or deny list. It restricts the main agent loop; it is not a sandbox.
+
+| `permissions` | Tools offered |
+| --- | --- |
+| `read-only` | `read`, `grep`, `glob`, `ls`, `semSearch`, `readLints`, `webSearch`, `webFetch`, `readTodos`, `updateTodos` |
+| `read-write` | The default toolset without `shell` and `task` (no commands, no subagents) |
+| `full` | The SDK's default toolset |
+
+## Treat the summary as untrusted
+
+`summary` is model output. Interpolating it into a `run:` script or a `github-script` body splices the text into the script before it executes. Pass it through `env:` instead. Every example on [Examples](/examples) does.
+
+## Isolation
+
+The agent runs in `working-directory`, and Cursor loads project rules, hooks and settings from there. Point it somewhere outside the checkout when you want a run that the repository's own `.cursor/` configuration cannot influence.

@@ -1,0 +1,30 @@
+name: Test whitespace-only prompt
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-key: dummy-cursor-key-for-validation
+          prompt: "   "
+      - name: Assert action failed on blank prompt
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          EXIT_CODE: ${{ steps.action.outputs.exit-code }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "exit-code: $EXIT_CODE"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected failure for blank prompt"
+            exit 1
+          fi
+          if [ -n "$EXIT_CODE" ]; then
+            echo "FAIL: exit-code output should not be set when input validation fails"
+            exit 1
+          fi
+          echo "PASS"
