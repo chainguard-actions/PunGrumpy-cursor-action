@@ -106,7 +106,7 @@ runs:
         fi
     - name: Setup Node.js
       if: steps.node.outputs.satisfied != 'true'
-      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      uses: chainguard-actions/actions-setup-node@e20a37d07d82e3bf48155b3fc8ee09a87c6c907d # v6
       with:
         node-version: "24"
     - name: Install action dependencies
