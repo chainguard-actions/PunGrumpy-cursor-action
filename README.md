@@ -16,6 +16,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v2.0.0 | [`v2.0.0`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/tree/v2.0.0) | [`e381777`](https://github.com/PunGrumpy/cursor-action/commit/e381777e6d9bc97a4156d77494d5075a2ddaeac4) | [`HARDENING.md`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/blob/v2.0.0/HARDENING.md) |
 | v2.0.1 | [`v2.0.1`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/tree/v2.0.1) | [`3294d02`](https://github.com/PunGrumpy/cursor-action/commit/3294d026b8443613b6c6d00845e5c59ca31d50f9) | [`HARDENING.md`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/blob/v2.0.1/HARDENING.md) |
 | v2.1.0 | [`v2.1.0`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/tree/v2.1.0) | [`9406fdd`](https://github.com/PunGrumpy/cursor-action/commit/9406fddc42a9562299328fa8d977209527fee279) | [`HARDENING.md`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/blob/v2.1.0/HARDENING.md) |
+| v2.1.1 | [`v2.1.1`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/tree/v2.1.1) | [`8afa3cd`](https://github.com/PunGrumpy/cursor-action/commit/8afa3cd36d9edae92cea6460cb9ba485df11e562) | [`HARDENING.md`](https://github.com/chainguard-actions/PunGrumpy-cursor-action/blob/v2.1.1/HARDENING.md) |
 
 ## Privacy
 
