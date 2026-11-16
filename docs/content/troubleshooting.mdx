@@ -1,0 +1,29 @@
+---
+title: Troubleshooting
+description: What the common failures mean.
+---
+
+## `Invalid User API Key`
+
+The key is missing, malformed, or was revoked. Check that the secret is set on the repository (or organisation) and exposed to the job.
+
+## `[plan_required] ... not available for free users`
+
+The key is valid but the account cannot run agents. This is billing, not configuration: nothing in the workflow will fix it.
+
+## A model id is rejected
+
+When Cursor rejects the model, the step log and the job summary list every model and setting the API key can use, written the way the `model` input takes them. Copy one of those lines.
+
+- `Cannot use this model: <id>` means the id is not in the account's catalog. The catalog no longer has `default`, so use `composer-2.5`, which is also the input's default. The Cursor CLI's names such as `grok-4.7-medium` are not catalog ids either. Write `grok-4.7` or `grok-4.7[reasoning_effort=medium]` instead.
+- `Model unavailable on Plus ... with fixed settings` means the plan does not allow a setting you overrode. Remove the brackets to run the catalog's defaults.
+- `Invalid parameters for registry model` means a setting id or value does not exist for that model. Check the spelling against the list.
+- `Invalid 'model' value` means the brackets are malformed. The action stops before it starts the agent.
+
+## The step timed out or failed
+
+Check the job summary. When a run reports `cancelled` (including timeout-triggered cancellation) or `error`, the action exits with code `1`. When `timeout` elapses the action asks the SDK to cancel the run and waits up to ten seconds for it to stop; if it does not, the step still fails as `cancelled`. Increase `timeout` if the agent needs more time to complete.
+
+## `Cannot find module`
+
+The action failed to install its own dependencies, which points at the runner's network or a corrupted npm cache rather than at your workflow. Re-run the job; if it persists, open an issue with the full step log.
